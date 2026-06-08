@@ -1,0 +1,55 @@
+<root>
+   <name>ETL GLPI TFS Work Intens</name>
+   <key>etlglpitfsworkintens</key>
+   <!-- stable, beta, development, alpha, ... -->
+   <state>stable</state>
+   <logo>https://raw.githubusercontent.com/pluginsGLPI/etlglpitfsworkintens/main/etlglpitfsworkintens.png</logo>
+   <description>
+      <short>
+         <!-- Add as many lang tag you want -->
+         <en>Plugin para extração, transformação e carga de dados originados no TFS Azure DevOps no GLPI</en>
+         <fr>Plugin para extração, transformação e carga de dados originados no TFS Azure DevOps no GLPI</fr>
+      </short>
+      <long>
+         <!-- Add as many lang tag you want -->
+         <en>Plugin para extração, transformação e carga de dados originados no TFS Azure DevOps no GLPI</en>
+         <fr>Plugin para extração, transformação e carga de dados originados no TFS Azure DevOps no GLPI</fr>
+      </long>
+   </description>
+   <homepage>https://github.com/alexhctp/etl_glpi_tfs_work_itens.git</homepage>
+   <download>https://github.com/alexhctp/etl_glpi_tfs_work_itens/releases</download>
+   <issues>https://github.com/alexhctp/etl_glpi_tfs_work_itens/issues</issues>
+   <readme>https://github.com/alexhctp/etl_glpi_tfs_work_itens/blob/main/README.md</readme>
+   <authors>
+      <!-- Add as many author tag you want -->
+      <author>alexhctp</author>
+   </authors>
+   <versions>
+      <!-- Add as many version tag you want -->
+      <version>
+         <num>1.0.0</num>
+         <!-- Add as many compatibility tag you want -->
+         <compatibility>~11.0.0</compatibility>
+      </version>
+   </versions>
+   <langs>
+      <!-- Add as many lang tag you want -->
+      <lang>en_GB</lang>
+      <lang>fr_FR</lang>
+   </langs>
+   <license>MIT license</license>
+   <!--tags>
+      <en>
+         <tag>One tag</tag>
+         <tag>Another tag</tag>
+      </en>
+      <fr>
+         <tag>Un tag</tag>
+         <tag>Un autre tag</tag>
+      </fr>
+   </tags-->
+   <!--screenshots>
+      <screenshot>https://github.com/pluginsGLPI/etlglpitfsworkintens/raw/main/screenshot.png</screenshot>
+      <screenshot>https://github.com/pluginsGLPI/etlglpitfsworkintens/raw/main/screenshot2.png</screenshot>
+   </screenshots-->
+</root>
