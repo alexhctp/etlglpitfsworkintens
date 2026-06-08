@@ -90,10 +90,10 @@ final class WorkItemCsvImporter
                 $created_date_raw = self::normalizeField((string) ($data[$header_map['createddate']] ?? ''));
                 $closed_date_raw = self::normalizeField((string) ($data[$header_map['closeddate']] ?? ''));
 
-                $created_date = self::parseTfsDate($created_date_raw);
+                $date_creation = self::parseTfsDate($created_date_raw);
                 $closed_date = self::parseTfsDate($closed_date_raw);
 
-                if (($created_date_raw !== '' && $created_date === null) || ($closed_date_raw !== '' && $closed_date === null)) {
+                if (($created_date_raw !== '' && $date_creation === null) || ($closed_date_raw !== '' && $closed_date === null)) {
                     $stats['skipped_invalid']++;
                     continue;
                 }
@@ -110,7 +110,7 @@ final class WorkItemCsvImporter
                     'assigned_to'    => self::truncate(self::normalizeField((string) ($data[$header_map['assignedto']] ?? '')), 255),
                     'state'          => self::truncate(self::normalizeField((string) ($data[$header_map['state']] ?? '')), 255),
                     'tags'           => self::normalizeField((string) ($data[$header_map['tags']] ?? '')),
-                    'created_date'   => $created_date,
+                    'date_creation'  => $date_creation,
                     'closed_date'    => $closed_date,
                 ];
             }
@@ -123,7 +123,6 @@ final class WorkItemCsvImporter
             foreach ($rows as $row_id => $row) {
                 try {
                     $inserted = $DB->insert(self::TABLE, $row + [
-                        'date_creation' => $now,
                         'date_mod'      => $now,
                     ]);
 
@@ -138,7 +137,7 @@ final class WorkItemCsvImporter
                                     'assigned_to'    => $row['assigned_to'],
                                     'state'          => $row['state'],
                                     'tags'           => $row['tags'],
-                                    'created_date'   => $row['created_date'],
+                                    'date_creation'  => $row['date_creation'],
                                     'closed_date'    => $row['closed_date'],
                                     'date_mod'       => $now,
                                 ],
@@ -286,15 +285,9 @@ final class WorkItemCsvImporter
     {
         global $DB;
 
-        if (!$DB->fieldExists(self::TABLE, 'created_date')) {
-            $DB->doQuery(
-                "ALTER TABLE `" . self::TABLE . "` ADD COLUMN `created_date` datetime DEFAULT NULL AFTER `tags`"
-            );
-        }
-
         if (!$DB->fieldExists(self::TABLE, 'closed_date')) {
             $DB->doQuery(
-                "ALTER TABLE `" . self::TABLE . "` ADD COLUMN `closed_date` datetime DEFAULT NULL AFTER `created_date`"
+                "ALTER TABLE `" . self::TABLE . "` ADD COLUMN `closed_date` datetime DEFAULT NULL AFTER `date_creation`"
             );
         }
     }

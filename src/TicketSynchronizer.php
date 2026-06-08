@@ -117,8 +117,9 @@ final class TicketSynchronizer
         $glpi_status  = self::mapStatus((string) ($row['state'] ?? ''));
         $work_item_id = (int) $row['work_item_id'];
         $db_row_id    = (int) $row['id'];
-        $created_date = self::normalizeDatetimeValue($row['created_date'] ?? null);
+        $created_date = self::normalizeDatetimeValue($row['date_creation'] ?? null);
         $closed_date  = self::normalizeDatetimeValue($row['closed_date'] ?? null);
+        $assignee_id  = self::findGlpiUserIdFromAssignedTo((string) ($row['assigned_to'] ?? ''));
 
         // If a link exists and ticket still exists in DB, never create a new one.
         $linked_ticket_id = (int) ($row['tickets_id'] ?? 0);
@@ -146,6 +147,11 @@ final class TicketSynchronizer
                         $update_data['closedate'] = $closed_date;
                         $has_changes = true;
                     }
+                }
+
+                if ($assignee_id > 0 && !$ticket->isUser(\CommonITILActor::ASSIGN, $assignee_id)) {
+                    $update_data['_users_id_assign'] = $assignee_id;
+                    $has_changes = true;
                 }
 
                 if ($has_changes) {
@@ -199,6 +205,9 @@ final class TicketSynchronizer
         $requester_id = (int) \Session::getLoginUserID();
         if ($requester_id > 0) {
             $ticket_data['_users_id_requester'] = $requester_id;
+        }
+        if ($assignee_id > 0) {
+            $ticket_data['_users_id_assign'] = $assignee_id;
         }
 
         if ($created_date !== null) {
@@ -294,5 +303,74 @@ final class TicketSynchronizer
         }
 
         return (int) ($row['id'] ?? 0);
+    }
+
+    private static function findGlpiUserIdFromAssignedTo(string $assigned_to): int
+    {
+        global $DB;
+
+        $login = self::buildLoginFromAssignedTo($assigned_to);
+        if ($login === '') {
+            return 0;
+        }
+
+        $iterator = $DB->request([
+            'SELECT' => ['id'],
+            'FROM'   => 'glpi_users',
+            'WHERE'  => [
+                'name'       => $login,
+                'is_deleted' => 0,
+                'is_active'  => 1,
+            ],
+            'LIMIT'  => 1,
+        ]);
+
+        $row = $iterator->current();
+        if (!is_array($row)) {
+            return 0;
+        }
+
+        return (int) ($row['id'] ?? 0);
+    }
+
+    private static function buildLoginFromAssignedTo(string $assigned_to): string
+    {
+        $assigned_to = trim($assigned_to);
+        if ($assigned_to === '') {
+            return '';
+        }
+
+        $name_part = preg_replace('/\s*<[^>]+>\s*$/', '', $assigned_to) ?? $assigned_to;
+        $pieces = array_map('trim', explode(',', $name_part, 2));
+        if (count($pieces) !== 2 || $pieces[0] === '' || $pieces[1] === '') {
+            return '';
+        }
+
+        $surname = self::normalizeLoginToken($pieces[0]);
+        $firstname = self::normalizeLoginToken($pieces[1]);
+        if ($firstname === '' || $surname === '') {
+            return '';
+        }
+
+        return $firstname . '.' . $surname;
+    }
+
+    private static function normalizeLoginToken(string $value): string
+    {
+        $value = trim($value);
+        if ($value === '') {
+            return '';
+        }
+
+        $converted = @iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $value);
+        if (is_string($converted) && $converted !== '') {
+            $value = $converted;
+        }
+
+        $value = strtolower($value);
+        $value = preg_replace('/[^a-z0-9]+/', '.', $value) ?? '';
+        $value = trim($value, '.');
+
+        return $value;
     }
 }

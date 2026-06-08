@@ -53,9 +53,8 @@ function plugin_etlglpitfsworkintens_install(): bool
                 `state` varchar(255) NOT NULL DEFAULT '',
                 `tickets_id` int {$default_key_sign} NOT NULL DEFAULT '0',
                 `tags` text DEFAULT NULL,
-                `created_date` datetime DEFAULT NULL,
-                `closed_date` datetime DEFAULT NULL,
                 `date_creation` datetime DEFAULT NULL,
+                `closed_date` datetime DEFAULT NULL,
                 `date_mod` datetime DEFAULT NULL,
                 PRIMARY KEY (`id`),
                 UNIQUE KEY `uniq_work_item_id` (`work_item_id`),
@@ -73,17 +72,24 @@ function plugin_etlglpitfsworkintens_install(): bool
         ");
     }
 
-    if ($DB->tableExists('glpi_tfs_work_itens') && !$DB->fieldExists('glpi_tfs_work_itens', 'created_date')) {
-        $DB->doQuery("
-            ALTER TABLE `glpi_tfs_work_itens`
-                ADD COLUMN `created_date` datetime DEFAULT NULL AFTER `tags`
-        ");
-    }
-
     if ($DB->tableExists('glpi_tfs_work_itens') && !$DB->fieldExists('glpi_tfs_work_itens', 'closed_date')) {
         $DB->doQuery("
             ALTER TABLE `glpi_tfs_work_itens`
-                ADD COLUMN `closed_date` datetime DEFAULT NULL AFTER `created_date`
+                ADD COLUMN `closed_date` datetime DEFAULT NULL AFTER `date_creation`
+        ");
+    }
+
+    if ($DB->tableExists('glpi_tfs_work_itens') && $DB->fieldExists('glpi_tfs_work_itens', 'created_date')) {
+        $DB->doQuery("
+            UPDATE `glpi_tfs_work_itens`
+            SET `date_creation` = `created_date`
+            WHERE `date_creation` IS NULL
+              AND `created_date` IS NOT NULL
+        ");
+
+        $DB->doQuery("
+            ALTER TABLE `glpi_tfs_work_itens`
+                DROP COLUMN `created_date`
         ");
     }
 
