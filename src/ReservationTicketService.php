@@ -12,11 +12,11 @@ final class ReservationTicketService
 
     public static function syncFromReservationRequest(Reservation $reservation): void
     {
-        global $DB;
-
-        if (!$DB->tableExists(self::MAP_TABLE)) {
+        if (!self::ensureMapTableExists()) {
             return;
         }
+
+        global $DB;
 
         $reservation_id = (int) ($reservation->fields['id'] ?? 0);
         if ($reservation_id <= 0) {
@@ -55,6 +55,10 @@ final class ReservationTicketService
 
     public static function getMappedTicketForReservation(int $reservation_id): int
     {
+        if (!self::ensureMapTableExists()) {
+            return 0;
+        }
+
         global $DB;
 
         if ($reservation_id <= 0) {
@@ -73,6 +77,27 @@ final class ReservationTicketService
         }
 
         return (int) ($row['tickets_id'] ?? 0);
+    }
+
+    private static function ensureMapTableExists(): bool
+    {
+        global $DB;
+
+        if (!is_object($DB) || !method_exists($DB, 'tableExists') || !method_exists($DB, 'doQuery')) {
+            return false;
+        }
+
+        if ($DB->tableExists(self::MAP_TABLE)) {
+            return true;
+        }
+
+        $default_charset   = \DBConnection::getDefaultCharset();
+        $default_collation = \DBConnection::getDefaultCollation();
+        $default_key_sign  = \DBConnection::getDefaultPrimaryKeySignOption();
+
+        $DB->doQuery("\n            CREATE TABLE `" . self::MAP_TABLE . "` (\n                `id` int {$default_key_sign} NOT NULL AUTO_INCREMENT,\n                `reservations_id` int {$default_key_sign} NOT NULL DEFAULT '0',\n                `tickets_id` int {$default_key_sign} NOT NULL DEFAULT '0',\n                `date_creation` datetime DEFAULT NULL,\n                `date_mod` datetime DEFAULT NULL,\n                PRIMARY KEY (`id`),\n                UNIQUE KEY `uniq_reservation` (`reservations_id`),\n                KEY `tickets_id` (`tickets_id`)\n            ) ENGINE=InnoDB DEFAULT CHARSET={$default_charset}\n              COLLATE={$default_collation} ROW_FORMAT=DYNAMIC\n        ");
+
+        return $DB->tableExists(self::MAP_TABLE);
     }
 
     private static function extractTicketIdFromRequest(): int
