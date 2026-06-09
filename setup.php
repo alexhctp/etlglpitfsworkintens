@@ -54,8 +54,14 @@ function plugin_init_etlglpitfsworkintens(): void
 
     $PLUGIN_HOOKS['csrf_compliant']['etlglpitfsworkintens'] = true;
 
-    if (Plugin::isPluginActive('etlglpitfsworkintens') && Session::haveRight('config', UPDATE)) {
-        $PLUGIN_HOOKS[Hooks::CONFIG_PAGE]['etlglpitfsworkintens'] = 'front/import.php';
+    if (Plugin::isPluginActive('etlglpitfsworkintens')) {
+        $PLUGIN_HOOKS[Hooks::ADD_JAVASCRIPT]['etlglpitfsworkintens'][] = 'public/js/reservation-ticket-dropdown.js';
+        $PLUGIN_HOOKS[Hooks::ITEM_ADD]['etlglpitfsworkintens'][Reservation::class] = 'plugin_etlglpitfsworkintens_item_add_reservation';
+        $PLUGIN_HOOKS[Hooks::ITEM_UPDATE]['etlglpitfsworkintens'][Reservation::class] = 'plugin_etlglpitfsworkintens_item_update_reservation';
+
+        if (Session::haveRight('config', UPDATE)) {
+            $PLUGIN_HOOKS[Hooks::CONFIG_PAGE]['etlglpitfsworkintens'] = 'front/import.php';
+        }
     }
 }
 

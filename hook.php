@@ -93,6 +93,22 @@ function plugin_etlglpitfsworkintens_install(): bool
         ");
     }
 
+    if (!$DB->tableExists('glpi_plugin_etlglpitfsworkintens_reservationtickets')) {
+        $DB->doQuery("
+            CREATE TABLE `glpi_plugin_etlglpitfsworkintens_reservationtickets` (
+                `id` int {$default_key_sign} NOT NULL AUTO_INCREMENT,
+                `reservations_id` int {$default_key_sign} NOT NULL DEFAULT '0',
+                `tickets_id` int {$default_key_sign} NOT NULL DEFAULT '0',
+                `date_creation` datetime DEFAULT NULL,
+                `date_mod` datetime DEFAULT NULL,
+                PRIMARY KEY (`id`),
+                UNIQUE KEY `uniq_reservation` (`reservations_id`),
+                KEY `tickets_id` (`tickets_id`)
+            ) ENGINE=InnoDB DEFAULT CHARSET={$default_charset}
+              COLLATE={$default_collation} ROW_FORMAT=DYNAMIC
+        ");
+    }
+
     return true;
 }
 
@@ -102,4 +118,24 @@ function plugin_etlglpitfsworkintens_install(): bool
 function plugin_etlglpitfsworkintens_uninstall(): bool
 {
     return true;
+}
+
+function plugin_etlglpitfsworkintens_item_add_reservation(Reservation $reservation): void
+{
+    try {
+        require_once __DIR__ . '/src/ReservationTicketService.php';
+        \GlpiPlugin\Etlglpitfsworkintens\ReservationTicketService::syncFromReservationRequest($reservation);
+    } catch (Throwable $e) {
+        // Never let plugin code abort the normal GLPI reservation flow.
+    }
+}
+
+function plugin_etlglpitfsworkintens_item_update_reservation(Reservation $reservation): void
+{
+    try {
+        require_once __DIR__ . '/src/ReservationTicketService.php';
+        \GlpiPlugin\Etlglpitfsworkintens\ReservationTicketService::syncFromReservationRequest($reservation);
+    } catch (Throwable $e) {
+        // Never let plugin code abort the normal GLPI reservation flow.
+    }
 }
